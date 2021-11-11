@@ -1,15 +1,14 @@
 <?php
 session_start();
 require "function.php";
-parse_str($_SERVER['QUERY_STRING'], $user_id);
-$id = $user_id['id'];
+parse_str($_SERVER['QUERY_STRING'], $id_from_link);
+$id = $id_from_link['id'];
 
 if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован ли админ
 	redirect_to("page_login.php");
 	exit;
 }
-
-$user = get_info_by_id($id);
+$user = get_user_by_id($id);
 ?>
 
 
@@ -46,7 +45,7 @@ $user = get_info_by_id($id);
 						<?php endif; ?>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="unlogin.php">Выйти</a> <!-- Адресация на файл выхода -->
+                        <a class="nav-link" href="logout.php">Выйти</a> <!-- Адресация на файл выхода -->
                     </li>
 <!-- ----------------------------------------------------------------------------------------------------------- -->
                 </ul>
@@ -55,8 +54,8 @@ $user = get_info_by_id($id);
         <main id="js-page-content" role="main" class="page-content mt-3">
 		
 		<?php 
-		alert_message($name = "danger");
-		alert_message($name = "success");
+		display_flash_message($name = "danger");
+		display_flash_message($name = "success");
 		?>
 		
             <div class="subheader">
@@ -71,9 +70,10 @@ $user = get_info_by_id($id);
                         <div class="row no-gutters row-grid">
                             <div class="col-12">
                                 <div class="d-flex flex-column align-items-center justify-content-center p-4">
-                                    <img src="<?php echo $user["style_link"];?>" class="rounded-circle shadow-2 img-thumbnail" alt="">
+                                    <img src="<?php echo $user["avatar"];?>" class="rounded-circle shadow-2 img-thumbnail" alt="">
                                     <h5 class="mb-0 fw-700 text-center mt-3">
                                         <?php echo $user["user_name"];?>
+										<small class="text-muted mb-0"><?php echo $user["user_job"];?></small>
                                     </h5>
                                     <div class="mt-4 text-center demo">
                                         <a href="<?php echo $user["instagram_link"];?>" class="fs-xl" style="color:#C13584">

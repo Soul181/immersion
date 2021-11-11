@@ -1,25 +1,23 @@
 <?php 
 session_start();
 require "function.php";
-parse_str($_SERVER['QUERY_STRING'], $user_id);
+parse_str($_SERVER['QUERY_STRING'], $id_from_link); // получаю массив где будет храниться id пользователя, чей профиль редактируем
+$id = $id_from_link['id'];
+$_SESSION['id_from_link'] = $id; // передаю id юзера в edit.php
 
 if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован ли пользователь
 	redirect_to("page_login.php");
 	exit;
 }	
 
-if ($_SESSION['user']['role'] != "admin"){ // проверка, НЕ авторизован ли пользователь
-	if ($_SESSION['user']['id'] != $user_id['id']){ // редактирую свой аккаунт? $user_id['id'] получаю из url адреса
-	set_message("danger", "Ошибка! Редактировать можно только свой профиль!");
+if (!is_author()){
+	set_flash_message("danger", "Ошибка! Редактировать можно только свой профиль!");
 	redirect_to("page_users.php");
-	return false;
-	} 
-		// здесь решить $_SESSION['user']['id'] != $user_id['id'];
-}	
+	exit;
+}
 
-if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли это
-	$_SESSION['user']['id'] = $user_id['id'];
-	} 
+// получаю данные пользователя для заполнения формы
+$user = get_user_by_id($id);
 ?>
 
 
@@ -54,7 +52,7 @@ if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли 
 						<?php endif; ?>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="unlogin.php">Выйти</a> <!-- Адресация на файл выхода -->
+                        <a class="nav-link" href="logout.php">Выйти</a> <!-- Адресация на файл выхода -->
                     </li>
 <!-- ----------------------------------------------------------------------------------------------------------- -->
             </ul>
@@ -63,8 +61,8 @@ if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли 
     <main id="js-page-content" role="main" class="page-content mt-3">
 	
 			<?php 
-				alert_message($name = "danger");
-				alert_message($name = "success");
+				display_flash_message($name = "danger");
+				display_flash_message($name = "success");
 			?>
 	
         <div class="subheader">
@@ -85,25 +83,25 @@ if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли 
                                 <!-- username -->
                                 <div class="form-group">
                                     <label class="form-label" for="simpleinput">Имя</label>
-                                    <input type="text" id="user_name" name="user_name" class="form-control" value="Иван иванов">
+                                    <input type="text" id="user_name" name="user_name" class="form-control" value="<?php echo $user['user_name'];?>">
                                 </div>
 
                                 <!-- title -->
                                 <div class="form-group">
                                     <label class="form-label" for="simpleinput">Место работы</label>
-                                    <input type="text" id="user_position" name="user_position" class="form-control" value="Marlin Веб-разработчик">
+                                    <input type="text" id="user_job" name="user_job" class="form-control" value="<?php echo $user['user_job'];?>">
                                 </div>
 
                                 <!-- tel -->
                                 <div class="form-group">
                                     <label class="form-label" for="simpleinput">Номер телефона</label>
-                                    <input type="text" id="user_phone" name="user_phone" class="form-control" value="8 888 8888 88">
+                                    <input type="text" id="user_phone" name="user_phone" class="form-control" value="<?php echo $user['user_phone'];?>">
                                 </div>
 
                                 <!-- address -->
                                 <div class="form-group">
                                     <label class="form-label" for="simpleinput">Адрес</label>
-                                    <input type="text" id="adress" name="adress" class="form-control" value="Восточные Королевства, Штормград">
+                                    <input type="text" id="adress" name="adress" class="form-control" value="<?php echo $user['adress'];?>">
                                 </div>
                                 <div class="col-md-12 mt-3 d-flex flex-row-reverse">
                                     <button id="js-edit-btn" type="submit" class="btn btn-warning">Редактировать</button>

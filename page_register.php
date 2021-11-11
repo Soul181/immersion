@@ -1,4 +1,7 @@
-<?php session_start();?>
+<?php 
+session_start();
+require "function.php";
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -63,8 +66,7 @@
                                 <div class="card p-4 rounded-plus bg-faded">
 								
 									<?php 
-									require "function.php";
-									alert_message($name = "danger");
+									display_flash_message($name = "danger");
 									?>
 								
                                     <form  id="js-login" method="POST" action="register.php">

@@ -1,25 +1,24 @@
 <?php 
 session_start();
 require "function.php";
-parse_str($_SERVER['QUERY_STRING'], $profile_id);
-$id = $profile_id['id'];
+parse_str($_SERVER['QUERY_STRING'], $id_from_link); // получаю массив где будет храниться id пользователя, чей профиль редактируем
+$id = $id_from_link['id'];
+$_SESSION['id_from_link'] = $id; // передаю id юзера в edit.php
 
 if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован ли пользователь
 	redirect_to("page_login.php");
 	exit;
 }	
 
-if ($_SESSION['user']['role'] != "admin" && $_SESSION['user']['id'] != $id){ // проверка, НЕ авторизован ли пользователь, редактирую свой аккаунт?
-	set_message("danger", "Ошибка! Редактировать можно только свой профиль!");
+if (!is_author()){
+	set_flash_message("danger", "Ошибка! Редактировать можно только свой профиль!");
 	redirect_to("page_users.php");
-	return false;
-}	
+	exit;
+}
 
-if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли это
-	$_SESSION['profile_id'] = $id;
-	} 
+// получаю данные пользователя для заполнения формы
+$user = get_user_by_id($id);
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -52,7 +51,7 @@ if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли 
 						<?php endif; ?>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="unlogin.php">Выйти</a> <!-- Адресация на файл выхода -->
+                        <a class="nav-link" href="logout.php">Выйти</a> <!-- Адресация на файл выхода -->
                     </li>
 <!-- ----------------------------------------------------------------------------------------------------------- -->
             </ul>
@@ -61,8 +60,8 @@ if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли 
     <main id="js-page-content" role="main" class="page-content mt-3">
 	
 			<?php 
-				alert_message($name = "danger");
-				alert_message($name = "success");
+				display_flash_message($name = "danger");
+				display_flash_message($name = "success");
 			?>
 			
         <div class="subheader">
@@ -83,7 +82,7 @@ if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли 
                                 <!-- email -->
                                 <div class="form-group">
                                     <label class="form-label" for="simpleinput">Email</label>
-                                    <input type="email" id="emailverify" name="email" class="form-control" value="john@example.com">
+                                    <input type="email" id="emailverify" name="email" class="form-control" value="<?php echo $user['email'];?>">
                                 </div>
 
                                 <!-- password -->

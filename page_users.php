@@ -39,7 +39,7 @@ if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован
 						<?php endif; ?>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="unlogin.php">Выйти</a> <!-- Адресация на файл выхода -->
+                        <a class="nav-link" href="logout.php">Выйти</a> <!-- Адресация на файл выхода -->
                     </li>
 <!-- ----------------------------------------------------------------------------------------------------------- -->
                 </ul>
@@ -49,8 +49,8 @@ if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован
         <main id="js-page-content" role="main" class="page-content mt-3">
 		
 			<?php 
-				alert_message($name = "danger");
-				alert_message($name = "success");
+				display_flash_message($name = "danger");
+				display_flash_message($name = "success");
 			?>
 			
             <div class="subheader">
@@ -82,17 +82,9 @@ if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован
 <!-- ----------------------------------------------------------------------------------------------------------- -->
                 <?php 
 				
-				// Первый вариант был с файлом users_list.php в нем хранился массив со всеми пользователями. Это неудобно
-				// Теперь здесь используя БД ПОЛНОСТЬЮ заполняем всю нашу страницу. В таблице есть все необходимые поля
-				
-				$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-				$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-				mysqli_set_charset($connect, "utf8"); // установка кодировки
-
-				$sql = "SELECT * FROM `base`"; //формируем команду найти совпадение в БД
+				$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
+				mysqli_set_charset($connect, "utf8"); // установка кодировки	
+				$sql = "SELECT * FROM `users`"; //формируем команду найти совпадение в БД
 				$result = mysqli_query($connect, $sql); // отправляем команду в БД
 				while ($user = mysqli_fetch_array($result)):?>
 
@@ -102,9 +94,9 @@ if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован
                             <div class="d-flex flex-row align-items-center">
                                 <span class="status status-<?php echo $user["status"];?> mr-3">
 								<?php if ($user["id"] != $_SESSION['user']['id']):?>
-									<a href="page_profile.php?id=<?php echo $user["id"];?>"><span class="rounded-circle profile-image d-block " style="background-image:url('<?php echo $user["style_link"];?>'); background-size: cover;"></span></a>
+									<a href="page_profile.php?id=<?php echo $user["id"];?>"><span class="rounded-circle profile-image d-block " style="background-image:url('<?php echo $user["avatar"];?>'); background-size: cover;"></span></a>
 								<?php else:?>
-									<span class="rounded-circle profile-image d-block " style="background-image:url('<?php echo $user["style_link"];?>'); background-size: cover;"></span>
+									<span class="rounded-circle profile-image d-block " style="background-image:url('<?php echo $user["avatar"];?>'); background-size: cover;"></span>
 								<?php endif;?>
                                 </span>
                                 <div class="info-card-text flex-1">
@@ -134,7 +126,7 @@ if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован
                                         Удалить</a>
                                     </div>
 									<?php endif;?>
-                                    <span class="text-truncate text-truncate-xl"><?php echo $user["user_position"];?></span>
+                                    <span class="text-truncate text-truncate-xl"><?php echo $user["user_job"];?></span>
                                 </div>
                                 <button class="js-expand-btn btn btn-sm btn-default d-none" data-toggle="collapse" data-target="#<?php echo $user["id"];?> > .card-body + .card-body" aria-expanded="false">
                                     <span class="collapsed-hidden">+</span>

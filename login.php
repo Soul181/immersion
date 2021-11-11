@@ -8,7 +8,7 @@ $password = $_POST['password'];
 $login = login($email, $password);
 
 if (!$login) {
-	set_message("danger", "E-mail или пароль указаны неверно. Проверьте правильность написания.");
+	set_flash_message("danger", "E-mail или пароль указаны неверно. Проверьте правильность написания.");
 	redirect_to("page_login.php");
 	exit;
 } 

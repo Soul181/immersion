@@ -40,7 +40,7 @@ if (!isset($_SESSION['user']) && $_SESSION['user']['role'] != "admin"){ // пр�
 						<?php endif; ?>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="unlogin.php">Выйти</a> <!-- Адресация на файл выхода -->
+                        <a class="nav-link" href="logout.php">Выйти</a> <!-- Адресация на файл выхода -->
                     </li>
 <!-- ----------------------------------------------------------------------------------------------------------- -->
             </ul>
@@ -53,8 +53,8 @@ if (!isset($_SESSION['user']) && $_SESSION['user']['role'] != "admin"){ // пр�
             </h1>
 
 		<?php 
-		alert_message($name = "danger");
-		alert_message($name = "success");
+		display_flash_message($name = "danger");
+		display_flash_message($name = "success");
 		?>
 
         </div>
@@ -76,7 +76,7 @@ if (!isset($_SESSION['user']) && $_SESSION['user']['role'] != "admin"){ // пр�
                                 <!-- title -->
                                 <div class="form-group">
                                     <label class="form-label" for="simpleinput">Место работы</label>
-                                    <input type="text" id="user_position" name="user_position" class="form-control">
+                                    <input type="text" id="user_job" name="user_job" class="form-control">
                                 </div>
 
                                 <!-- tel -->

@@ -1,253 +1,175 @@
 <?php 
 session_start();
 
-function get_info_by_id($id){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// функция возвращает всю информацию по юзеру, если такой email есть в базе
+function get_user_by_email($email){
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-
-	$sql = "SELECT * FROM `base` WHERE `id` = '$id'"; //формируем команду найти совпадение в БД
+	$sql = "SELECT * FROM `users` WHERE `email`='$email'"; //формируем команду найти совпадение в БД
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД
-	$user = mysqli_fetch_array($result);
+	$user = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
 	return $user;
 }
 
-function get_info_by_admin(){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// добавление пользователя и возвращение информации по нему, нам нужен id
+function add_user($email, $password){
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-
-	$sql = "SELECT * FROM `base` WHERE `role` = 'admin'"; //формируем команду найти совпадение в БД
-	$result = mysqli_query($connect, $sql); // отправляем команду в БД
-	$admin = mysqli_fetch_array($result);
-	return $admin;
-}
-
-function get_user_by_email($email){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	if ($connect && isset($email)) {
-		$sql = "SELECT * FROM `base` WHERE `email`='$email'"; //формируем команду найти совпадение в БД
-		$result = mysqli_query($connect, $sql); // отправляем команду в БД
-		$user = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
-		return $user;
-		}
-}
-
-function get_image_by_link($style_link) {
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	if ($connect && isset($style_link)) {
-		$sql = "SELECT * FROM `base` WHERE `style_link`='$style_link'"; //формируем команду найти совпадение в БД
-		$result = mysqli_query($connect, $sql); // отправляем команду в БД
-		$image = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
-		return $image;
-		}
-}
-
-function upload_image($style_link){
-		if ($image['style_link'] == $style_link) { // если такое имя уже есть
-			set_message("danger", "Такое название картирки уже есть. Измените название");
-			return false;
-		} else { // ессли имя свободно, то продолжаем
-			if ($image == TRUE) { // если картинка была
-				if ($image['style_link'] != 'img/demo/avatars/no-image.png') { // удаляем старый файл, если не равен значению по умолчанию
-					unlink($image['style_link']); 
-				}
-				copy($_FILES['picture']['tmp_name'], $style_link); // добавление новой картинки
-			} else { // просто добавляем новую
-				copy($_FILES['picture']['tmp_name'], $style_link); // добавление новой картинки
-			}
-		}
-}
-
-function edit_link_image($style_link){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['user']['id'];
-	$sql = "UPDATE `base` SET `style_link` = '$style_link' WHERE `id` = '$id'"; // Запрос на обновление
+	$password_hash = password_hash($password, PASSWORD_DEFAULT);
+	$sql = "INSERT INTO `users`(`email`, `password`, `role`) VALUES ('$email','$password_hash','user')";// Запрос на запись в БД
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
+	$user = get_user_by_email($email); // получаю информацию по только что добавленному юзеру, нужен id
+	return $user;						   // возвращает $user 
 }
 
-function set_message($name, $message){
+// подготовка сообщения, записываем в сессию
+function set_flash_message($name, $message){
 	$_SESSION[$name] = $message;
 }
 
+// перенаправлние по указанному url
 function redirect_to($url){
 	header('Location: '.$url);
 	exit;
 }
 
-function add_user($status, $user_name, $style_link, $user_position, $user_phone, $email, $password, $adress, $vk_link, $telegram_link, $instagram_link){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	// проверяю, откуда получены данные, если из формы регистрации, то будет только email и password
-	// если со страницы добавления пользователя админом, то принимаем все данные
-	if (!isset($status) && !isset($user_name) && !isset($style_link) && !isset($user_position) && !isset($user_phone) && !isset($adress) && !isset($vk_link) && !isset($telegram_link) && !isset($instagram_link)) {
-		$sql = "INSERT INTO `base`(`status`, `user_name`, `style_link`, `user_position`, `user_phone`,
-		`email`, `password`, `role`, `adress`, `vk_link`, `telegram_link`, `instagram_link`) VALUES ('-','-',
-		'-','-','-','$email','$password','user','-','-','-','-')";// Запрос в БД, Добавляем запись в БД только email и password
-	} else {
-	$sql = "INSERT INTO `base`(`status`, `user_name`, `style_link`, `user_position`, `user_phone`,
-	`email`, `password`, `role`, `adress`, `vk_link`, `telegram_link`, `instagram_link`) VALUES ('$status','$user_name',
-	'$style_link','$user_position','$user_phone','$email','$password','user','$adress',
-	'$vk_link','$telegram_link','$instagram_link')";// Запрос в БД, Добавляем всё в БД
-	}
-	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
-}
-
-function alert_message($name){
+// вывести сообщение
+function display_flash_message($name){
 	if (isset($_SESSION[$name])){
 	echo "<div class=\"alert alert-".$name." text-dark\" role=\"alert\"> ".$_SESSION[$name]."</div>";
 	unset($_SESSION[$name]);
 	}
 }
 
+// функция авторизации
 function login($email, $password){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	if ($connect) {
-		$sql = "SELECT * FROM `base` WHERE `email`='$email'"; //формируем команду найти совпадение в БД
-		$result = mysqli_query($connect, $sql); // отправляем команду в БД
-		$user = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
-		
-		if($user){
-			if($user["password"] == $password){
-				$_SESSION['user'] = $user;
-				return TRUE;
-			}
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
+	mysqli_set_charset($connect, "utf8"); // установка кодировки	
+	$sql = "SELECT * FROM `users` WHERE `email`='$email'"; //формируем команду найти совпадение в БД
+	$result = mysqli_query($connect, $sql); // отправляем команду в БД
+	$user = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
+
+	if($user){
+		if(password_verify($password, $user['password'])){
+			$_SESSION['user'] = $user;
+			return TRUE;
 		}
-		return FALSE;
-		}
+	}
+	return FALSE;	
 }
 
-function unlogin(){
+// функция очистка сессии от авторизационных данных пользователя
+function logout(){
 	session_unset();
 	redirect_to($url="page_login.php");
 	exit;
 }
 
-function edit_user_name($user_name){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// редактирование общей информации
+function edit_information($id, $user_name, $user_job, $user_phone, $adress){
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['user']['id'];
-	$sql = "UPDATE `base` SET `user_name` = '$user_name' WHERE `id` = '$id'"; // Запрос на обновление
+	//$sql = "INSERT INTO `users`(`user_name`, `user_job`, `user_phone`, `adress`) VALUES ('$user_name', '$user_job', '$user_phone', '$adress') WHERE `id` = '$id'";// Запрос на запись в БД
+	$sql = "UPDATE `users` SET `user_name` = '$user_name', `user_job` = '$user_job', `user_phone` = '$user_phone', `adress` = '$adress' WHERE `id` = '$id'"; //  Запрос на запись в БД
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
-function edit_user_position($user_position){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// функция установить статус
+function set_status($id, $status){
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['user']['id'];
-	$sql = "UPDATE `base` SET `user_position` = '$user_position' WHERE `id` = '$id'"; // Запрос на обновление
+	$sql = "UPDATE `users` SET `status` = '$status' WHERE `id` = '$id'"; // Запрос на обновление
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
-function edit_user_phone($user_phone){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// функция добавления аватарки
+function upload_avatar($id, $avatar){
+	// проверяю, есть ли уже аватар по этому id
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['user']['id'];
-	$sql = "UPDATE `base` SET `user_phone` = '$user_phone' WHERE `id` = '$id'"; // Запрос на обновление
+	$sql = "SELECT `avatar` FROM `users` WHERE `id`='$id'"; //формируем команду найти совпадение в БД
+	$result = mysqli_query($connect, $sql); // отправляем команду в БД
+	$image = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
+	// если картинка уже есть у пользователя, то удаляем её
+	// получаю только имя и расширение файла что уже есть, если есть
+	$path_parts = pathinfo($image['avatar']);
+	$name_avatar = $path_parts['basename'];
+	$path = 'img/demo/avatars/'; // задаю расположение папки с картинками на сервере, менять только в этом месте
+	$default_avatar = "no-image.png"; // аватар, который устновится по умолчанию, если нет другого
+	// проверяю имя полученного аватара, установленного ранее, если он был
+	if ($image['avatar'] != NULL && $name_avatar != $default_avatar){ // если картинка была, и это не дефолтная, то удаляем
+		unlink($image['avatar']); // удалить старую картинку 
+	}
+	if ($_FILES['picture']['tmp_name'] == NULL){ // если картинка не была выбрана для загрузки или не была загружена, то ставим аватар по умолчанию
+		$full_path_name_avatar = $path.$default_avatar;
+	} else {
+		// подготавливаю новое имя для картинки
+		$path_parts = pathinfo($_FILES['picture']['name']); // получаем путь, имя файла с расширением
+		$extension = $path_parts['extension']; // получаем от него только расширение
+		$new_avatar_name = uniqid(); // уникальная 13 значная строка
+		$avatar = $new_avatar_name.".".$extension; // новое уникальное имя файла с расширением
+		$full_path_name_avatar = $path.$avatar; // получаю строку полный путь плюс имя файла
+		move_uploaded_file($_FILES['picture']['tmp_name'], $full_path_name_avatar); // перемещает загруженый файл в новое место с новым именем
+	}
+	// теперь записываем полный путь + имя в базу
+	$sql = "UPDATE `users` SET `avatar` = '$full_path_name_avatar' WHERE `id` = '$id'"; // Запрос на обновление
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
-function edit_adress($adress){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// функция добавления ссылок на социальные сети
+function add_social_links($id, $vk_link, $telegram_link, $instagram_link){
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['user']['id'];
-	$sql = "UPDATE `base` SET `adress` = '$adress' WHERE `id` = '$id'"; // Запрос на обновление
+	$sql = "UPDATE `users` SET `vk_link` = '$vk_link', `telegram_link` = '$telegram_link', `instagram_link` = '$instagram_link' WHERE `id` = '$id'"; //  Запрос на запись в БД
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
-function edit_email_password($email, $password){ // id передается в сессии
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+// получаю всю данные о пользователе по конкретному id
+// id принимаем методом GET
+function get_user_by_id($id){
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['profile_id'];
-	$sql = "UPDATE `base` SET `email` = '$email', `password` = '$password' WHERE `id` = '$id'"; // Запрос на обновление
+	$sql = "SELECT * FROM `users` WHERE `id` = '$id'"; //формируем команду найти совпадение в БД
+	$result = mysqli_query($connect, $sql); // отправляем команду в БД
+	$user = mysqli_fetch_array($result);
+	return $user;
+}
+
+// проверка своего аккаунта
+function is_author(){
+	if ($_SESSION['user']['id'] != $_SESSION['id_from_link']){ // если редактирую не свой профиль, то FALSE
+		if ($_SESSION['user']['role'] != "admin"){
+		return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+// функция редактирования email и password
+function edit_credentials($email, $password){
+	$id = $_SESSION['id_from_link'];
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
+	mysqli_set_charset($connect, "utf8"); // установка кодировки
+	$password_hash = password_hash($password, PASSWORD_DEFAULT);
+	$sql = "UPDATE `users` SET `email` = '$email', `password` = '$password_hash' WHERE `id` = '$id'"; //  Запрос на запись в БД
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
-function edit_status($status){ // id передается в сессии
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['profile_id'];
-	$sql = "UPDATE `base` SET `status` = '$status' WHERE `id` = '$id'"; // Запрос на обновление
-	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
-}
-
+// функия удаления пользователя
 function delete_user(){
-	$db_data = ["servername" => "localhost",
-				"username" => "root",
-				"password" => "root",
-				"database" => "immersion"];
-	$connect = @mysqli_connect($db_data["servername"], $db_data["username"], $db_data["password"], $db_data["database"]); // Соединяемся с базой
+	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	
-	$id = $_SESSION['profile_id'];
-	$sql = "DELETE FROM `base` WHERE `id` = '$id'"; // Запрос на обновление
+	$id = $_SESSION['id_from_link'];
+	$sql = "SELECT `avatar` FROM `users` WHERE `id`='$id'"; //формируем команду найти совпадение в БД
+	$result = mysqli_query($connect, $sql); // отправляем команду в БД
+	$image = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
+	if ($image['avatar'] != NULL){
+	unlink($image['avatar']); // удалить картинку 
+	}
+	$sql = "DELETE FROM `users` WHERE `id` = '$id'"; // Запрос на обновление
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 	return true;
 }
+
 
 ?>

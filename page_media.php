@@ -1,27 +1,23 @@
 <?php 
 session_start();
 require "function.php";
-parse_str($_SERVER['QUERY_STRING'], $profile_id);
-$id = $profile_id['id'];
+parse_str($_SERVER['QUERY_STRING'], $id_from_link); // получаю массив где будет храниться id пользователя, чей профиль редактируем
+$id = $id_from_link['id'];
+$_SESSION['id_from_link'] = $id; // передаю id юзера в edit.php
 
 if (!isset($_SESSION['user'])){ // проверка, НЕ авторизован ли пользователь
 	redirect_to("page_login.php");
 	exit;
 }	
 
-if ($_SESSION['user']['role'] != "admin" && $_SESSION['user']['id'] != $id){ // проверка, НЕ авторизован ли пользователь, редактирую свой аккаунт?
-	set_message("danger", "Ошибка! Редактировать можно только свой профиль!");
+if (!is_author()){
+	set_flash_message("danger", "Ошибка! Редактировать можно только свой профиль!");
 	redirect_to("page_users.php");
-	return false;
-}	
+	exit;
+}
 
-if ($_SESSION['user']['role'] == "admin"){ // проверка, админ ли это
-	$_SESSION['profile_id'] = $id;
-	} else {
-		$_SESSION['profile_id'] = $_SESSION['user']['id'];
-	}
-	
-$user = get_info_by_id($id);
+// получаю данные пользователя для заполнения формы
+$user = get_user_by_id($id);
 ?>
 
 <!DOCTYPE html>
@@ -55,7 +51,7 @@ $user = get_info_by_id($id);
 						<?php endif; ?>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="unlogin.php">Выйти</a> <!-- Адресация на файл выхода -->
+                        <a class="nav-link" href="logout.php">Выйти</a> <!-- Адресация на файл выхода -->
                     </li>
 <!-- ----------------------------------------------------------------------------------------------------------- -->
             </ul>
@@ -78,7 +74,7 @@ $user = get_info_by_id($id);
                             </div>
                             <div class="panel-content">
                                 <div class="form-group">
-                                    <img src="<?php echo $user['style_link'];?>" alt="" class="img-responsive" width="200">
+                                    <img src="<?php echo $user['avatar'];?>" alt="" class="img-responsive" width="200">
                                 </div>
 
                                 <div class="form-group">

@@ -1,5 +1,5 @@
 <?php
 require "function.php";
-unlogin();
+logout();
 exit;
 ?>

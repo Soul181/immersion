@@ -1,4 +1,7 @@
-<?php session_start();?>
+<?php
+session_start();
+require "function.php";
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -38,9 +41,8 @@
             
 			
 			<?php 
-			require "function.php";
-			alert_message($name = "danger");
-			alert_message($name = "success");
+			display_flash_message($name = "danger");
+			display_flash_message($name = "success");
 			?>
 			
 			
