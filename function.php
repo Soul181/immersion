@@ -136,8 +136,8 @@ function get_user_by_id($id){
 }
 
 // проверка своего аккаунта
-function is_author(){
-	if ($_SESSION['user']['id'] != $_SESSION['id_from_link']){ // если редактирую не свой профиль, то FALSE
+function is_author($id){
+	if ($_SESSION['user']['id'] != $id){ // если редактирую не свой профиль, то FALSE
 		if ($_SESSION['user']['role'] != "admin"){
 		return FALSE;
 		}
@@ -146,8 +146,8 @@ function is_author(){
 }
 
 // функция редактирования email и password
-function edit_credentials($email, $password){
-	$id = $_SESSION['id_from_link'];
+function edit_credentials($id, $email, $password){
+	//$id = $_SESSION['id_from_link'];
 	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
 	$password_hash = password_hash($password, PASSWORD_DEFAULT);
@@ -156,10 +156,9 @@ function edit_credentials($email, $password){
 }
 
 // функия удаления пользователя
-function delete_user(){
+function delete_user($id){
 	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	$id = $_SESSION['id_from_link'];
 	$sql = "SELECT `avatar` FROM `users` WHERE `id`='$id'"; //формируем команду найти совпадение в БД
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД
 	$image = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет

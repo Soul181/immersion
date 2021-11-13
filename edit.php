@@ -1,8 +1,9 @@
 <?php
 session_start();
 require "function.php";
+parse_str($_SERVER['QUERY_STRING'], $id_from_link); // получаю массив где будет храниться id пользователя, чей профиль редактируем
+$id = $id_from_link['id'];
 
-$id = $_SESSION['id_from_link'];
 $user_name = $_POST['user_name'];
 $user_job = $_POST['user_job'];
 $user_phone = $_POST['user_phone'];
