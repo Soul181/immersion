@@ -82,38 +82,43 @@ function set_status($id, $status){
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
+// функция проверяет, есть ли у юзера аватар, если нет, то ставит дефолтный
+function has_avatar($id){
+	$user = get_user_by_id($id);
+	$path = "img/demo/avatars/"; // задаю расположение папки с картинками на сервере, менять только в этом месте
+	$default_avatar = "no-image.png"; // аватар, который устновится по умолчанию, если нет другого
+	$avatar = $path.$default_avatar; // полный путь
+	if (!$user['avatar']){ // если нет, то устанавливаем дефолтную
+		// теперь записываем полный путь + имя в базу
+		$sql = "UPDATE `users` SET `avatar` = '$avatar' WHERE `id` = '$id'"; // Запрос на обновление
+		$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
+		}
+}
+
 // функция добавления аватарки
 function upload_avatar($id, $avatar){
 	// проверяю, есть ли уже аватар по этому id
-	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
-	mysqli_set_charset($connect, "utf8"); // установка кодировки
-	$sql = "SELECT `avatar` FROM `users` WHERE `id`='$id'"; //формируем команду найти совпадение в БД
-	$result = mysqli_query($connect, $sql); // отправляем команду в БД
-	$image = mysqli_fetch_array($result); // получаем ответ из БД, есть совпадение, или нет
-	// если картинка уже есть у пользователя, то удаляем её
-	// получаю только имя и расширение файла что уже есть, если есть
+	$user = get_user_by_id($id);
+	// проверяю имя и расширение полученного аватара, установленного ранее
 	$path_parts = pathinfo($image['avatar']);
 	$name_avatar = $path_parts['basename'];
 	$path = 'img/demo/avatars/'; // задаю расположение папки с картинками на сервере, менять только в этом месте
 	$default_avatar = "no-image.png"; // аватар, который устновится по умолчанию, если нет другого
-	// проверяю имя полученного аватара, установленного ранее, если он был
-	if ($image['avatar'] != NULL && $name_avatar != $default_avatar){ // если картинка была, и это не дефолтная, то удаляем
-		unlink($image['avatar']); // удалить старую картинку 
+	// если картинка уже есть и это не дефолтная картинка, то удаляем ее
+	if ($name_avatar != $default_avatar){ // если картинка была, и это не дефолтная, то удаляем, дефолтную не удаляем
+		unlink($user['avatar']); // удалить старую картинку 
 	}
-	if ($_FILES['picture']['tmp_name'] == NULL){ // если картинка не была выбрана для загрузки или не была загружена, то ставим аватар по умолчанию
-		$full_path_name_avatar = $path.$default_avatar;
-	} else {
+	if ($_FILES['picture']['tmp_name']){ // если картинка была выбрана для загрузки, то загружаем аватар
 		// подготавливаю новое имя для картинки
 		$path_parts = pathinfo($_FILES['picture']['name']); // получаем путь, имя файла с расширением
 		$extension = $path_parts['extension']; // получаем от него только расширение
 		$new_avatar_name = uniqid(); // уникальная 13 значная строка
-		$avatar = $new_avatar_name.".".$extension; // новое уникальное имя файла с расширением
-		$full_path_name_avatar = $path.$avatar; // получаю строку полный путь плюс имя файла
-		move_uploaded_file($_FILES['picture']['tmp_name'], $full_path_name_avatar); // перемещает загруженый файл в новое место с новым именем
+		$avatar = $path.$new_avatar_name.".".$extension; // новое уникальное имя файла с расширением
+		move_uploaded_file($_FILES['picture']['tmp_name'], $avatar); // перемещает загруженый файл в новое место с новым именем
+		// теперь записываем полный путь + имя в базу
+		$sql = "UPDATE `users` SET `avatar` = '$avatar' WHERE `id` = '$id'"; // Запрос на обновление
+		$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 	}
-	// теперь записываем полный путь + имя в базу
-	$sql = "UPDATE `users` SET `avatar` = '$full_path_name_avatar' WHERE `id` = '$id'"; // Запрос на обновление
-	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
 // функция добавления ссылок на социальные сети
@@ -124,8 +129,7 @@ function add_social_links($id, $vk_link, $telegram_link, $instagram_link){
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 }
 
-// получаю всю данные о пользователе по конкретному id
-// id принимаем методом GET
+// получаю всю данные о пользователе по конкретному id, полученному методом GET
 function get_user_by_id($id){
 	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
@@ -147,7 +151,6 @@ function is_author($id){
 
 // функция редактирования email и password
 function edit_credentials($id, $email, $password){
-	//$id = $_SESSION['id_from_link'];
 	$connect = @mysqli_connect("localhost", "root", "root", "immersion"); // Соединяемся с базой
 	mysqli_set_charset($connect, "utf8"); // установка кодировки
 	$password_hash = password_hash($password, PASSWORD_DEFAULT);
@@ -169,6 +172,5 @@ function delete_user($id){
 	$result = mysqli_query($connect, $sql); // отправляем команду в БД на запись
 	return true;
 }
-
 
 ?>
